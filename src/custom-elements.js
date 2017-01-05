@@ -212,9 +212,25 @@ let Deferred;
 
       // 8:
       /** @type {string} */
-      const localName = name;
+      let localName = name;
 
-      // 9, 10: We do not support extends currently.
+      // 9, 10
+      if (options.extends) {
+          // 7.1
+          const extendsNameError = checkValidCustomElementName(options.extends);
+          if (!extendsNameError) {
+              throw new Error(`Cannot extend '${options.extends}': A custom element cannot extend a custom element.`);
+          }
+
+          // 7.2
+          const el = document.createElement(options.extends);
+          if (el.constructor === window.HTMLUnknownElement) {
+              throw new Error(`Cannot extend '${options.extends}': is not a real HTMLElement`);
+          }
+
+          // 7.3
+          localName = options.extends;
+      }
 
       // 11, 12, 13: Our define() isn't rentrant-safe
 
@@ -269,7 +285,7 @@ let Deferred;
       };
 
       // 16:
-      this._definitions.set(localName, definition);
+      this._definitions.set(name, definition);
       this._constructors.set(constructor, localName);
 
       // 17, 18, 19:
@@ -468,7 +484,11 @@ let Deferred;
       visitedNodes.add(element);
 
       /** @type {?CustomElementDefinition} */
-      const definition = this._definitions.get(element.localName);
+      const isAttr = element.getAttribute('is');
+      if (typeof isAttr === 'string') {
+          element.is = isAttr;
+      }
+      const definition = this._definitions.get(getCustomElementName(element));
       if (definition) {
         if (!element[_upgradedProp]) {
           this._upgradeElement(element, definition, true);
@@ -565,7 +585,7 @@ let Deferred;
           const node = walker.currentNode;
           if (node[_upgradedProp] && node[_attachedProp]) {
             node[_attachedProp] = false;
-            const definition = this._definitions.get(node.localName);
+            const definition = this._definitions.get(getCustomElementName(node));
             if (definition && definition.disconnectedCallback) {
               definition.disconnectedCallback.call(node);
             }
@@ -624,7 +644,7 @@ let Deferred;
           const target = /** @type {HTMLElement} */(mutation.target);
           // We should be gaurenteed to have a definition because this mutation
           // observer is only observing custom elements observedAttributes
-          const definition = this._definitions.get(target.localName);
+          const definition = this._definitions.get(getCustomElementName(target));
           const name = /** @type {!string} */(mutation.attributeName);
           const oldValue = mutation.oldValue;
           const newValue = target.getAttribute(name);
@@ -636,6 +656,10 @@ let Deferred;
         }
       }
     }
+  }
+
+  function getCustomElementName(element) {
+    return typeof element.is === 'string' ? element.is : element.tagName;
   }
 
   // Closure Compiler Exports
@@ -772,7 +796,7 @@ let Deferred;
 
     // Bail if this wasn't a fully upgraded custom element
     if (element[_upgradedProp] == true) {
-      const definition = _customElements()._definitions.get(element.localName);
+      const definition = _customElements()._definitions.get(getCustomElementName(element));
       const observedAttributes = definition.observedAttributes;
       const attributeChangedCallback = definition.attributeChangedCallback;
       if (attributeChangedCallback && observedAttributes.indexOf(name) >= 0) {
