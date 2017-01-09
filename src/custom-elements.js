@@ -700,7 +700,7 @@ let Deferred;
         if (this.constructor) {
           // Find the tagname of the constructor and create a new element with it
           const constructorInfo = customElements._constructors.get(this.constructor);
-          const options = constructorInfo.name ? {is: constructorInfo.name} : undefined;
+          const options = constructorInfo.name !== constructorInfo.localName ? {is: constructorInfo.name} : undefined;
           return _createElement(document, constructorInfo.localName, options, false);
         }
         throw new Error('Unknown constructor. Did you call customElements.define()?');

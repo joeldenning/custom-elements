@@ -96,6 +96,8 @@ suite('Custom Element Reactions', function() {
       }
       var XFoo = customElements.define('x-foo2', XFoo2);
       var xfoo = document.createElement('x-foo2');
+      assert.isNotOk(xfoo.is);
+      assert.isNotOk(xfoo.getAttribute('is'));
       assert.equal(xfoo.localName, 'x-foo2');
       assert.instanceOf(xfoo, XFoo2);
       assert.isTrue(pass);
