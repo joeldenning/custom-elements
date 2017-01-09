@@ -206,10 +206,10 @@ let Deferred;
       let localName = name;
 
       // 6:
-      let extends = options && options.extends;
+      let _extends = options ? options.extends : null;
 
       // 7:
-      if (extends) {
+      if (_extends) {
           // 7.1:
           const extendsNameError = checkValidCustomElementName(options.extends);
           if (!extendsNameError) {
@@ -223,7 +223,7 @@ let Deferred;
           }
 
           // 7.3:
-          localName = options.extends;
+          localName = _extends;
       }
 
       // 8, 9: Our define() isn't rentrant-safe
