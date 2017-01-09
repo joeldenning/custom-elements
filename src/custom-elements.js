@@ -182,17 +182,11 @@ let Deferred;
         throw new TypeError('constructor must be a Constructor');
       }
 
-      // 2. If constructor is an interface object whose corresponding interface
-      //    either is HTMLElement or has HTMLElement in its set of inherited
-      //    interfaces, throw a TypeError and abort these steps.
-      //
-      // It doesn't appear possible to check this condition from script
-
-      // 3:
+      // 2:
       const nameError = checkValidCustomElementName(name);
       if (nameError) throw nameError;
 
-      // 4, 5:
+      // 3:
       // Note: we don't track being-defined names and constructors because
       // define() isn't normally reentrant. The only time user code can run
       // during define() is when getting callbacks off the prototype, which
@@ -201,41 +195,44 @@ let Deferred;
         throw new Error(`An element with name '${name}' is already defined`);
       }
 
-      // 6, 7:
+      // 4:
       if (this._constructors.has(constructor)) {
         throw new Error(`Definition failed for '${name}': ` +
             `The constructor is already used.`);
       }
 
-      // 8:
+      // 5:
       /** @type {string} */
       let localName = name;
 
-      // 9, 10
-      if (options && options.extends) {
-          // 7.1
+      // 6:
+      let extends = options && options.extends;
+
+      // 7:
+      if (extends) {
+          // 7.1:
           const extendsNameError = checkValidCustomElementName(options.extends);
           if (!extendsNameError) {
               throw new Error(`Cannot extend '${options.extends}': A custom element cannot extend a custom element.`);
           }
 
-          // 7.2
+          // 7.2:
           const el = document.createElement(options.extends);
           if (el instanceof window.HTMLUnknownElement) {
               throw new Error(`Cannot extend '${options.extends}': is not a real HTMLElement`);
           }
 
-          // 7.3
+          // 7.3:
           localName = options.extends;
       }
 
-      // 11, 12, 13: Our define() isn't rentrant-safe
+      // 8, 9: Our define() isn't rentrant-safe
 
-      // 14.1:
+      // 10.1:
       /** @type {Object} */
       const prototype = constructor.prototype;
 
-      // 14.2:
+      // 10.2:
       if (typeof prototype !== 'object') {
         throw new TypeError(`Definition failed for '${name}': ` +
             `constructor.prototype must be an object`);
@@ -253,23 +250,18 @@ let Deferred;
         return callback;
       }
 
-      // 3, 4:
+      // 10.3, 10.4:
       const connectedCallback = getCallback('connectedCallback');
 
-      // 5, 6:
       const disconnectedCallback = getCallback('disconnectedCallback');
 
-      // Divergence from spec: we always throw if attributeChangedCallback is
-      // not a function.
-
-      // 7, 9.1:
       const attributeChangedCallback = getCallback('attributeChangedCallback');
 
-      // 8, 9.2, 9.3:
+      // 10.5, 10.6:
       const observedAttributes =
           (attributeChangedCallback && constructor['observedAttributes']) || [];
 
-      // 15:
+      // 11:
       /** @type {CustomElementDefinition} */
       const definition = {
         name: name,
@@ -281,14 +273,14 @@ let Deferred;
         observedAttributes: observedAttributes,
       };
 
-      // 16:
+      // 12:
       this._definitions.set(name, definition);
       this._constructors.set(constructor, definition);
 
-      // 17, 18, 19:
+      // 13, 14, 15:
       this._upgradeDoc();
 
-      // 20:
+      // 16:
       /** @type {Deferred} **/
       const deferred = this._whenDefinedMap.get(localName);
       if (deferred) {

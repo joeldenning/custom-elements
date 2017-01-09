@@ -74,7 +74,7 @@ the other webcomponentsjs polyfills, and its build is not integrated into the de
 
 To build run:
 
-    npm run build
+    gulp CustomElementsV1
 
 This creates a CustomElementsV1.min.js file in dist/
 
