@@ -138,7 +138,7 @@ let Deferred;
       /** @private {!Map<string, !CustomElementDefinition>} **/
       this._definitions = new Map();
 
-      /** @private {!Map<Function, string>} **/
+      /** @private {!Map<Function, !CustomElementDefinition>} **/
       this._constructors = new Map();
 
       /** @private {!Map<string, !Deferred>} **/
@@ -283,7 +283,7 @@ let Deferred;
 
       // 16:
       this._definitions.set(name, definition);
-      this._constructors.set(constructor, {localName, name});
+      this._constructors.set(constructor, definition);
 
       // 17, 18, 19:
       this._upgradeDoc();
@@ -654,6 +654,10 @@ let Deferred;
     }
   }
 
+  /**
+   * @param {!Map<string, !CustomElementDefinition>} definitions
+   * @param {!Node|!HTMLElement|null} node
+   */
   function getDefinition(definitions, node) {
     const name = typeof node.is === 'string' ? node.is : node.tagName.toLowerCase();
     const definition = definitions.get(name);
@@ -679,7 +683,7 @@ let Deferred;
   patchElement('HTMLElement')
   var htmlElementSubclasses = [ 'Button', 'Canvas', 'Data', 'Head', 'Mod', 'TableCell', 'TableCol', 'Anchor', 'Area', 'Base', 'Body', 'BR', 'DataList', 'Details', 'Dialog', 'Div', 'DList', 'Embed', 'FieldSet', 'Form', 'Heading', 'HR', 'Html', 'IFrame', 'Image', 'Input', 'Keygen', 'Label', 'Legend', 'LI', 'Link', 'Map', 'Media', 'Menu', 'MenuItem', 'Meta', 'Meter', 'Object', 'OList', 'OptGroup', 'Option', 'Output', 'Paragraph', 'Param', 'Picture', 'Pre', 'Progress', 'Quote', 'Script', 'Select', 'Slot', 'Source', 'Span', 'Style', 'TableCaption', 'Table', 'TableRow', 'TableSection', 'Template', 'TextArea', 'Time', 'Title', 'Track', 'UList', 'Unknown'];
   for (let index in htmlElementSubclasses) {
-      patchElement(`HTML${htmlElementSubclasses[index]}Element`);
+      patchElement(`HTML${htmlElementSubclasses[Number(index)]}Element`);
   }
 
   function patchElement(varName) {
