@@ -215,7 +215,7 @@ let Deferred;
       let localName = name;
 
       // 9, 10
-      if (options.extends) {
+      if (options && options.extends) {
           // 7.1
           const extendsNameError = checkValidCustomElementName(options.extends);
           if (!extendsNameError) {
@@ -673,34 +673,43 @@ let Deferred;
   CustomElementRegistry.prototype['_observeRoot'] = CustomElementRegistry.prototype._observeRoot;
   CustomElementRegistry.prototype['_addImport'] = CustomElementRegistry.prototype._addImport;
 
-  // patch window.HTMLElement
-
-  /** @const */
-  const origHTMLElement = win.HTMLElement;
-  CustomElementRegistry.prototype['nativeHTMLElement'] = origHTMLElement;
-  /**
-   * @type {function(new: HTMLElement)}
-   */
-  const newHTMLElement = function HTMLElement() {
-    const customElements = _customElements();
-
-    // If there's an being upgraded, return that
-    if (customElements._newInstance) {
-      const i = customElements._newInstance;
-      customElements._newInstance = null;
-      return i;
-    }
-    if (this.constructor) {
-      // Find the tagname of the constructor and create a new element with it
-      const tagName = customElements._constructors.get(this.constructor);
-      return _createElement(doc, tagName, undefined, false);
-    }
-    throw new Error('Unknown constructor. Did you call customElements.define()?');
+  patchElement('HTMLElement')
+  var htmlElementSubclasses = [ 'Button', 'Canvas', 'Data', 'Head', 'Mod', 'TableCell', 'TableCol', 'Anchor', 'Area', 'Base', 'Body', 'BR', 'DataList', 'Details', 'Dialog', 'Div', 'DList', 'Embed', 'FieldSet', 'Form', 'Heading', 'HR', 'Html', 'IFrame', 'Image', 'Input', 'Keygen', 'Label', 'Legend', 'LI', 'Link', 'Map', 'Media', 'Menu', 'MenuItem', 'Meta', 'Meter', 'Object', 'OList', 'OptGroup', 'Option', 'Output', 'Paragraph', 'Param', 'Picture', 'Pre', 'Progress', 'Quote', 'Script', 'Select', 'Slot', 'Source', 'Span', 'Style', 'TableCaption', 'Table', 'TableRow', 'TableSection', 'Template', 'TextArea', 'Time', 'Title', 'Track', 'UList', 'Unknown'];
+  for (let index in htmlElementSubclasses) {
+      patchElement(`HTML${htmlElementSubclasses[index]}Element`);
   }
-  win.HTMLElement = newHTMLElement;
-  win.HTMLElement.prototype = Object.create(origHTMLElement.prototype, {
-    constructor: {value: win.HTMLElement, configurable: true, writable: true},
-  });
+
+  function patchElement(varName) {
+      /** @const */
+      const origHTMLElement = win[varName];
+      if (!origHTMLElement) {
+          return;
+      }
+      CustomElementRegistry.prototype[`native${varName}`] = origHTMLElement;
+      /**
+       * @type {function(new: HTMLElement)}
+       */
+      const newHTMLElement = function() {
+        const customElements = _customElements();
+
+        // If there's an being upgraded, return that
+        if (customElements._newInstance) {
+          const i = customElements._newInstance;
+          customElements._newInstance = null;
+          return i;
+        }
+        if (this.constructor) {
+          // Find the tagname of the constructor and create a new element with it
+          const tagName = customElements._constructors.get(this.constructor);
+          return _createElement(doc, tagName, undefined, false);
+        }
+        throw new Error('Unknown constructor. Did you call customElements.define()?');
+      }
+      win[varName] = newHTMLElement;
+      win[varName].prototype = Object.create(origHTMLElement.prototype, {
+        constructor: {value: newHTMLElement, configurable: true, writable: true},
+      });
+  }
 
   // patch doc.createElement
   // TODO(justinfagnani): why is the cast neccessary?
@@ -721,8 +730,17 @@ let Deferred;
    */
   function _createElement(doc, tagName, options, callConstructor) {
     const customElements = _customElements();
+    let isAttr;
+    if (options && options.is) {
+        // We're going to take care of setting the is attribute ourselves
+        isAttr = options.is;
+        delete options.is;
+    }
     const element = options ? _origCreateElement.call(doc, tagName, options) :
       _origCreateElement.call(doc, tagName);
+    if (isAttr) {
+        element.setAttribute('is', isAttr);
+    }
     const definition = customElements._definitions.get(tagName.toLowerCase());
     if (definition) {
       customElements._upgradeElement(element, definition, callConstructor);
