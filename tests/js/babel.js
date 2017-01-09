@@ -74,4 +74,36 @@ suite('Babel ES5 Output', function() {
     assert.instanceOf(e, XBabel2);
   });
 
+  test('Babel generated es5 allows you to subclass built in elements', function() {
+    "use strict";
+    var constructorCalled = false;
+
+    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+    function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+    function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+    var XBabel3 = function (_HTMLButtonElement) {
+      _inherits(XBabel3, _HTMLButtonElement);
+
+      function XBabel3() {
+        _classCallCheck(this, XBabel3);
+        constructorCalled = true;
+
+        return _possibleConstructorReturn(this, (XBabel3.__proto__ || Object.getPrototypeOf(XBabel3)).apply(this, arguments));
+      }
+
+      return XBabel3;
+    }(HTMLButtonElement);
+
+    // register x-babel3
+    customElements.define('x-babel3', XBabel3, {extends: 'button'});
+    // create an instance via new
+    var e = document.createElement('button', {is: 'x-babel3'});
+    customElements.flush();
+    // test localName
+    assert(constructorCalled, 'babel es5 class should work for customized built-in elements');
+  });
+
 });

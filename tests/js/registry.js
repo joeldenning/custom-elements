@@ -77,6 +77,21 @@ suite('CustomElementsRegistry', function() {
       }, '', 'customElements.define failed to throw with a constructor argument with no prototype');
     });
 
+    test('third argument is an object with a string "extends" that must not be a custom element name', function() {
+        class XExtendsCustomElement extends HTMLElement {}
+        assert.throws(function () {
+            customElements.define('x-extends-custom-element', XExtendsCustomElement, {extends: 'another-custom-element'});
+        });
+    });
+
+    test('throws if you try to extend a deprecated element that is an HTMLUnknownElement', function() {
+        class Klass extends HTMLUnknownElement {}
+        assert.throws(function () {
+            // <blink> is an HTMLUnknownElement which is deprecated, so you cannot extend it.
+            customElements.define('x-extends-deprecated-element', Klass, {extends: 'blink'});
+        });
+    });
+
   });
 
   suite('get', function() {

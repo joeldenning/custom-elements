@@ -11,10 +11,8 @@ reactions. The source references old versions of the spec.
 ### To do
 
   1. Implement Node#isConnected
-  2. Implement built-in element extension (is=)
-  3. Add reaction callback ordering tests
-  4. Reorganize tests to be closer to spec structure
-  5. Performance tests
+  2. Reorganize tests to be closer to spec structure
+  3. Performance tests
 
 ## Building & Running Tests
 

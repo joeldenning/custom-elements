@@ -30,9 +30,9 @@ Other projects require a similar agreement: jQuery, Firefox, Apache, Node, and m
 
         cd $REPO
         npm install
-        gulp build
+        npm run build
 
-The builds will be placed into the `dist/` directory if all goes well.
+The builds will be placed into the custom-elements.min.js file if all goes well.
 
 1. Commit your code and make a pull request.
 

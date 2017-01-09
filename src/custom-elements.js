@@ -221,7 +221,7 @@ let Deferred;
 
           // 7.2
           const el = document.createElement(options.extends);
-          if (el.constructor === window.HTMLUnknownElement) {
+          if (el instanceof window.HTMLUnknownElement) {
               throw new Error(`Cannot extend '${options.extends}': is not a real HTMLElement`);
           }
 
@@ -283,7 +283,7 @@ let Deferred;
 
       // 16:
       this._definitions.set(name, definition);
-      this._constructors.set(constructor, localName);
+      this._constructors.set(constructor, {localName, name});
 
       // 17, 18, 19:
       this._upgradeDoc();
@@ -467,6 +467,9 @@ let Deferred;
         const walker = createTreeWalker(root);
         do {
           const node = /** @type {!HTMLElement} */ (walker.currentNode);
+          if (node.getAttribute('is')) {
+            node.is = node.getAttribute('is');
+          }
           this._addElement(node, visitedNodes);
         } while (walker.nextNode())
       }
@@ -481,11 +484,7 @@ let Deferred;
       visitedNodes.add(element);
 
       /** @type {?CustomElementDefinition} */
-      const isAttr = element.getAttribute('is');
-      if (typeof isAttr === 'string') {
-          element.is = isAttr;
-      }
-      const definition = this._definitions.get(getCustomElementName(element));
+      const definition = getDefinition(this._definitions, element);
       if (definition) {
         if (!element[_upgradedProp]) {
           this._upgradeElement(element, definition, true);
@@ -582,7 +581,7 @@ let Deferred;
           const node = walker.currentNode;
           if (node[_upgradedProp] && node[_attachedProp]) {
             node[_attachedProp] = false;
-            const definition = this._definitions.get(getCustomElementName(node));
+            const definition = getDefinition(this._definitions, node);
             if (definition && definition.disconnectedCallback) {
               definition.disconnectedCallback.call(node);
             }
@@ -641,7 +640,7 @@ let Deferred;
           const target = /** @type {HTMLElement} */(mutation.target);
           // We should be gaurenteed to have a definition because this mutation
           // observer is only observing custom elements observedAttributes
-          const definition = this._definitions.get(getCustomElementName(target));
+          const definition = getDefinition(this._definitions, target);
           const name = /** @type {!string} */(mutation.attributeName);
           const oldValue = mutation.oldValue;
           const newValue = target.getAttribute(name);
@@ -655,8 +654,15 @@ let Deferred;
     }
   }
 
-  function getCustomElementName(element) {
-    return typeof element.is === 'string' ? element.is : element.tagName;
+  function getDefinition(definitions, node) {
+    const name = typeof node.is === 'string' ? node.is : node.tagName.toLowerCase();
+    const definition = definitions.get(name);
+    if (definition) {
+      // Make sure local name matches the actual node's tagName
+      return definition.localName === node.tagName.toLowerCase() || definition.localName === node.is ? definition : null;
+    } else {
+      return null;
+    }
   }
 
   // Closure Compiler Exports
@@ -678,7 +684,7 @@ let Deferred;
 
   function patchElement(varName) {
       /** @const */
-      const origHTMLElement = win[varName];
+      const origHTMLElement = window[varName];
       if (!origHTMLElement) {
           return;
       }
@@ -697,15 +703,14 @@ let Deferred;
         }
         if (this.constructor) {
           // Find the tagname of the constructor and create a new element with it
-          const tagName = customElements._constructors.get(this.constructor);
-          return _createElement(doc, tagName, undefined, false);
+          const constructorInfo = customElements._constructors.get(this.constructor);
+          const options = constructorInfo.name ? {is: constructorInfo.name} : undefined;
+          return _createElement(document, constructorInfo.localName, options, false);
         }
         throw new Error('Unknown constructor. Did you call customElements.define()?');
       }
-      win[varName] = newHTMLElement;
-      win[varName].prototype = Object.create(origHTMLElement.prototype, {
-        constructor: {value: newHTMLElement, configurable: true, writable: true},
-      });
+      window[varName] = newHTMLElement;
+      window[varName].prototype = origHTMLElement.prototype;
   }
 
   // patch doc.createElement
@@ -733,12 +738,13 @@ let Deferred;
         isAttr = options.is;
         delete options.is;
     }
-    const element = options ? _origCreateElement.call(doc, tagName, options) :
-      _origCreateElement.call(doc, tagName);
+    const element = options ? _nativeCreateElement.call(doc, tagName, options) :
+      _nativeCreateElement.call(doc, tagName);
     if (isAttr) {
         element.setAttribute('is', isAttr);
+        element.is = isAttr;
     }
-    const definition = customElements._definitions.get(tagName.toLowerCase());
+    const definition = getDefinition(customElements._definitions, element);
     if (definition) {
       customElements._upgradeElement(element, definition, callConstructor);
     }
@@ -811,7 +817,7 @@ let Deferred;
 
     // Bail if this wasn't a fully upgraded custom element
     if (element[_upgradedProp] == true) {
-      const definition = _customElements()._definitions.get(getCustomElementName(element));
+      const definition = getDefinition(_customElements()._definitions, element);
       const observedAttributes = definition.observedAttributes;
       const attributeChangedCallback = definition.attributeChangedCallback;
       if (attributeChangedCallback && observedAttributes.indexOf(name) >= 0) {
