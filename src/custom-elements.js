@@ -654,8 +654,7 @@ let Deferred;
     const name = typeof node.is === 'string' ? node.is : node.tagName.toLowerCase();
     const definition = definitions.get(name);
     if (definition) {
-      // Make sure local name matches the actual node's tagName
-      return definition.localName === node.tagName.toLowerCase() || definition.localName === node.is ? definition : null;
+      return definition.localName === node.localName || definition.localName === node.is ? definition : null;
     } else {
       return null;
     }
