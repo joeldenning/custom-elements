@@ -218,7 +218,7 @@ let Deferred;
 
           // 7.2:
           const el = document.createElement(options.extends);
-          if (el instanceof window.HTMLUnknownElement) {
+          if (el instanceof window['HTMLUnknownElement']) {
               throw new Error(`Cannot extend '${options.extends}': is not a real HTMLElement`);
           }
 
@@ -460,7 +460,7 @@ let Deferred;
         do {
           const node = /** @type {!HTMLElement} */ (walker.currentNode);
           if (node.getAttribute('is')) {
-            node.is = node.getAttribute('is');
+            node['is'] = node.getAttribute('is');
           }
           this._addElement(node, visitedNodes);
         } while (walker.nextNode())
@@ -649,12 +649,13 @@ let Deferred;
   /**
    * @param {!Map<string, !CustomElementDefinition>} definitions
    * @param {!Node|!HTMLElement|null} node
+   * @return {CustomElementDefinition|null}
    */
   function getDefinition(definitions, node) {
-    const name = typeof node.is === 'string' ? node.is : node.tagName.toLowerCase();
+    const name = typeof node['is'] === 'string' ? node['is'] : node.localName;
     const definition = definitions.get(name);
     if (definition) {
-      return definition.localName === node.localName || definition.localName === node.is ? definition : null;
+      return definition.localName === node.localName || definition.localName === node['is'] ? definition : null;
     } else {
       return null;
     }
