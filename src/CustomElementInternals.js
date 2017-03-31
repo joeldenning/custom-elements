@@ -4,7 +4,7 @@ import CEState from './CustomElementState.js';
 export default class CustomElementInternals {
   constructor() {
     /** @type {!Map<string, !CustomElementDefinition>} */
-    this._localNameToDefinition = new Map();
+    this._nameToDefinition = new Map();
 
     /** @type {!Map<!Function, !CustomElementDefinition>} */
     this._constructorToDefinition = new Map();
@@ -17,20 +17,20 @@ export default class CustomElementInternals {
   }
 
   /**
-   * @param {string} localName
+   * @param {string} name
    * @param {!CustomElementDefinition} definition
    */
-  setDefinition(localName, definition) {
-    this._localNameToDefinition.set(localName, definition);
+  setDefinition(name, definition) {
+    this._nameToDefinition.set(name, definition);
     this._constructorToDefinition.set(definition.constructor, definition);
   }
 
   /**
-   * @param {string} localName
+   * @param {string} name
    * @return {!CustomElementDefinition|undefined}
    */
-  localNameToDefinition(localName) {
-    return this._localNameToDefinition.get(localName);
+  nameToDefinition(name) {
+    return this._nameToDefinition.get(name);
   }
 
   /**
@@ -39,6 +39,20 @@ export default class CustomElementInternals {
    */
   constructorToDefinition(constructor) {
     return this._constructorToDefinition.get(constructor);
+  }
+
+  /**
+   * @param {!Node} node
+   * @return {!CustomElementDefinition|null}
+   */
+  nodeToDefinition(node) {
+    const name = typeof node.__CE_is === 'string' ? node.__CE_is : node.localName;
+    const definition = this.nameToDefinition(name);
+    if (definition && definition.localName === node.localName) {
+      return definition;
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -208,6 +222,11 @@ export default class CustomElementInternals {
             this.patchAndUpgradeTree(importNode, visitedImports);
           });
         }
+      } else if (element.hasAttribute('is') || element.is) {
+        element.__CE_is = element.getAttribute('is') || element.is;
+        element.removeAttribute('is');
+        delete element.is;
+				elements.push(element);
       } else {
         elements.push(element);
       }
@@ -233,9 +252,8 @@ export default class CustomElementInternals {
    */
   upgradeElement(element) {
     const currentState = element.__CE_state;
-    if (currentState !== undefined) return;
-
-    const definition = this.localNameToDefinition(element.localName);
+		if (currentState !== undefined) return;
+    const definition = this.nodeToDefinition(element);
     if (!definition) return;
 
     definition.constructionStack.push(element);

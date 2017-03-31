@@ -47,7 +47,7 @@ export default class CustomElementRegistry {
      * @private
      * @type {!Array<string>}
      */
-    this._unflushedLocalNames = [];
+    this._unflushedNames = [];
 
     /**
      * @private
@@ -57,20 +57,35 @@ export default class CustomElementRegistry {
   }
 
   /**
-   * @param {string} localName
+   * @param {string} name
    * @param {!Function} constructor
    */
-  define(localName, constructor) {
+  define(name, constructor, options) {
     if (!(constructor instanceof Function)) {
       throw new TypeError('Custom element constructors must be functions.');
     }
 
-    if (!Utilities.isValidCustomElementName(localName)) {
-      throw new SyntaxError(`The element name '${localName}' is not valid.`);
+    if (!Utilities.isValidCustomElementName(name)) {
+      throw new SyntaxError(`The element name '${name}' is not valid.`);
     }
 
-    if (this._internals.localNameToDefinition(localName)) {
-      throw new Error(`A custom element with name '${localName}' has already been defined.`);
+    if (this._internals.nameToDefinition(name)) {
+      throw new Error(`A custom element with name '${name}' has already been defined.`);
+    }
+
+    let localName = name;
+
+    if (options && options.extends) {
+      if (Utilities.isValidCustomElementName(options.extends)) {
+        throw new Error(`A customized builtin element may not extend a custom element.`);
+      }
+
+      const el = document.createElement(options.extends);
+      if (el instanceof window['HTMLUnknownElement']) {
+        throw new Error(`Cannot extend '${options.extends}': is not a read HTML element`);
+      }
+
+      localName = options.extends;
     }
 
     if (this._elementDefinitionIsRunning) {
@@ -110,6 +125,7 @@ export default class CustomElementRegistry {
     }
 
     const definition = {
+      name,
       localName,
       constructor,
       connectedCallback,
@@ -120,9 +136,9 @@ export default class CustomElementRegistry {
       constructionStack: [],
     };
 
-    this._internals.setDefinition(localName, definition);
+    this._internals.setDefinition(name, definition);
 
-    this._unflushedLocalNames.push(localName);
+    this._unflushedNames.push(name);
 
     // If we've already called the flush callback and it hasn't called back yet,
     // don't call it again.
@@ -141,9 +157,9 @@ export default class CustomElementRegistry {
     this._flushPending = false;
     this._internals.patchAndUpgradeTree(document);
 
-    while (this._unflushedLocalNames.length > 0) {
-      const localName = this._unflushedLocalNames.shift();
-      const deferred = this._whenDefinedDeferred.get(localName);
+    while (this._unflushedNames.length > 0) {
+      const name = this._unflushedNames.shift();
+      const deferred = this._whenDefinedDeferred.get(name);
       if (deferred) {
         deferred.resolve(undefined);
       }
@@ -151,11 +167,11 @@ export default class CustomElementRegistry {
   }
 
   /**
-   * @param {string} localName
+   * @param {string} name
    * @return {Function|undefined}
    */
-  get(localName) {
-    const definition = this._internals.localNameToDefinition(localName);
+  get(name) {
+    const definition = this._internals.nameToDefinition(name);
     if (definition) {
       return definition.constructor;
     }
@@ -164,27 +180,27 @@ export default class CustomElementRegistry {
   }
 
   /**
-   * @param {string} localName
+   * @param {string} name
    * @return {!Promise<undefined>}
    */
-  whenDefined(localName) {
-    if (!Utilities.isValidCustomElementName(localName)) {
-      return Promise.reject(new SyntaxError(`'${localName}' is not a valid custom element name.`));
+  whenDefined(name) {
+    if (!Utilities.isValidCustomElementName(name)) {
+      return Promise.reject(new SyntaxError(`'${name}' is not a valid custom element name.`));
     }
 
-    const prior = this._whenDefinedDeferred.get(localName);
+    const prior = this._whenDefinedDeferred.get(name);
     if (prior) {
       return prior.toPromise();
     }
 
     const deferred = new Deferred();
-    this._whenDefinedDeferred.set(localName, deferred);
+    this._whenDefinedDeferred.set(name, deferred);
 
-    const definition = this._internals.localNameToDefinition(localName);
+    const definition = this._internals.nameToDefinition(name);
     // Resolve immediately only if the given local name has a definition *and*
     // the full document walk to upgrade elements with that local name has
     // already happened.
-    if (definition && this._unflushedLocalNames.indexOf(localName) === -1) {
+    if (definition && this._unflushedNames.indexOf(name) === -1) {
       deferred.resolve(undefined);
     }
 

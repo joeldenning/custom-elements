@@ -33,6 +33,16 @@ suite('Custom Element Reactions', function() {
       assert.instanceOf(xnew, XNew);
     });
 
+    test('new E() instantiates a new customized builtin element', function() {
+      class XNewBuiltin extends HTMLButtonElement {}
+      customElements.define('x-new-builtin', XNewBuiltin, {extends: 'button'});
+      var xnewbuiltin = new XNewBuiltin();
+
+      assert.equal(xnewbuiltin.localName, 'button');
+      assert.instanceOf(xnewbuiltin, XNewBuiltin);
+      assert.instanceOf(xnewbuiltin, HTMLElement);
+    });
+
     test('new E() instantiates subclasses', function() {
       class XSuper extends HTMLElement {}
       class XSub extends XSuper {}
@@ -80,6 +90,23 @@ suite('Custom Element Reactions', function() {
       assert.instanceOf(xfoo, XFoo2);
       assert.isTrue(pass);
     });
+
+		test('constructor is called on customized builtins when instantiated via createElement', function() {
+			var pass = false;
+			class XFoo2Builtin extends HTMLButtonElement {
+				constructor() {
+					super();
+					pass = true;
+				}
+			}
+			customElements.define('x-foo2-builtin', XFoo2Builtin, {extends: 'button'});
+
+			var el = document.createElement('button', {is: 'x-foo2-builtin'});
+			assert.equal(el.localName, 'button');
+			assert.instanceOf(el, XFoo2Builtin);
+			assert.instanceOf(el, HTMLButtonElement);
+			assert.isTrue(pass);
+		});
 
     test('subclass constructor is called when instantiated via createElement', function() {
       class XSuper2 extends HTMLElement {}
@@ -133,6 +160,21 @@ suite('Custom Element Reactions', function() {
       assert.isTrue(pass);
     });
 
+    test('constructor for customized builtin is called when instantiated via createElementNS', function() {
+      var pass = false;
+      class XFoo3Builtin extends HTMLButtonElement {
+        constructor() {
+          super();
+          pass = true;
+        }
+      }
+
+      customElements.define('x-foo3-builtin', XFoo3Builtin, {extends: 'button'});
+      var xfooBuiltin = document.createElementNS(HTMLNS, 'button', {is: 'x-foo3-builtin'});
+      assert.instanceOf(xfooBuiltin, XFoo3Builtin);
+      assert.isTrue(pass);
+    });
+
     test('constructor is called for each instance', function() {
       var count = 0;
       class XFoo4 extends HTMLElement {
@@ -162,6 +204,23 @@ suite('Custom Element Reactions', function() {
       assert.equal(count, 1);
     });
 
+    test('calls constructor only once for customized builtins', function() {
+      var count = 0;
+      class XConstructorBuiltin extends HTMLInputElement {
+        constructor() {
+          super();
+          count++;
+        }
+      }
+      customElements.define('x-constructor-builtin', XConstructorBuiltin, {extends: 'input'});
+      var xconstructorBuiltin = new XConstructorBuiltin();
+      assert.equal(count, 1);
+
+      count = 0;
+      var el = document.createElement('input', {is: 'x-constructor-builtin'});
+      assert.equal(count, 1);
+    });
+
     test('innerHTML on disconnected elements customizes contents', function() {
       var passed = false;
       class XInner extends HTMLElement {
@@ -171,9 +230,39 @@ suite('Custom Element Reactions', function() {
         }
       }
       customElements.define('x-inner', XInner);
+      passed = false;
       var div = document.createElement('div');
       div.innerHTML = '<x-inner></x-inner>';
       assert.isTrue(passed);
+    });
+
+    test('innerHTML on disconnected elements customizes contents with customized builtin elements', function() {
+      var passed = false;
+      class XInnerBuiltin extends HTMLDivElement {
+        constructor() {
+          super();
+          passed = true;
+        }
+      }
+      customElements.define('x-inner-builtin', XInnerBuiltin, {extends: 'div'});
+      var div = document.createElement('div');
+      passed = false;
+      div.innerHTML = '<div is="x-inner-builtin"></div>';
+      assert.isTrue(passed);
+    });
+
+    test('doesn\'t upgrade a native element if it\'s not created with the {is: "x-foo"} option', function() {
+      var upgraded;
+      class XNativeBuiltin extends HTMLSpanElement {
+        constructor() {
+          super();
+          upgraded = true;
+        }
+      }
+      customElements.define('x-native-builtin', XNativeBuiltin, {extends: 'span'});
+      upgraded = false;
+      document.createElement('span');
+      assert.isFalse(upgraded);
     });
 
   });
@@ -207,6 +296,24 @@ suite('Custom Element Reactions', function() {
       var xboo = new XBoo();
       xboo.setAttribute('foo', 'bar');
       xboo.setAttribute('foo', 'zot');
+    });
+
+    test('called when setting observed attribute on customized built-in element', function(done) {
+      class XBooBuiltin extends HTMLInputElement {
+        static get observedAttributes() {
+          return ['foo'];
+        }
+
+        attributeChangedCallback(inName, inOldValue) {
+					if (inName === 'foo' && inOldValue === 'bar' && this.attributes.foo.value === 'zot') {
+						done();
+					}
+        }
+      }
+			customElements.define('x-boo-builtin', XBooBuiltin, {extends: 'input'});
+			var xbooBuiltin = new XBooBuiltin();
+			xbooBuiltin.setAttribute('foo', 'bar');
+			xbooBuiltin.setAttribute('foo', 'zot');
     });
 
     test('called for existing observed attributes', function () {
@@ -243,7 +350,7 @@ suite('Custom Element Reactions', function() {
   });
 
   suite('connectedCallback', function() {
-    var connectedCount;
+    var connectedCount, builtinConnectedCount;
     class XConnected extends HTMLElement {
       connectedCallback() {
         connectedCount++;
@@ -251,13 +358,24 @@ suite('Custom Element Reactions', function() {
     }
     customElements.define('x-connected', XConnected);
 
+		class XConnectedBuiltin extends HTMLButtonElement {
+			connectedCallback() {
+				builtinConnectedCount++;
+			}
+		}
+		customElements.define('x-connected-builtin', XConnectedBuiltin, {extends: 'button'});
+
     setup(function() {
       connectedCount = 0;
+			builtinConnectedCount = 0;
     });
 
     test('is not called for disconnected custom elements', function() {
       new XConnected();
       assert.equal(connectedCount, 0);
+
+			new XConnectedBuiltin();
+			assert.equal(builtinConnectedCount, 0);
     });
 
     test('is not called for deeply disconnected custom elements', function() {
@@ -265,11 +383,19 @@ suite('Custom Element Reactions', function() {
       var child = new XConnected();
       parent.appendChild(child);
       assert.equal(connectedCount, 0);
+
+			parent = new XConnectedBuiltin();
+			child = new XConnectedBuiltin();
+			parent.appendChild(child);
+			assert.equal(builtinConnectedCount, 0);
     });
 
     test('called when appended to main document', function() {
       work.appendChild(new XConnected());
       assert.equal(connectedCount, 1);
+
+			work.appendChild(new XConnectedBuiltin());
+			assert.equal(builtinConnectedCount, 1);
     });
 
     test('called when re-appended to main document', function() {
@@ -278,6 +404,12 @@ suite('Custom Element Reactions', function() {
       work.removeChild(el);
       work.appendChild(el);
       assert.equal(connectedCount, 2);
+
+			el = new XConnectedBuiltin();
+			work.appendChild(el);
+			work.removeChild(el);
+			work.appendChild(el);
+			assert.equal(builtinConnectedCount, 2);
     });
 
     test('called in tree order', function() {
@@ -289,7 +421,14 @@ suite('Custom Element Reactions', function() {
         }
       }
 
+			class XOrderingBuiltin extends HTMLDivElement {
+				connectedCallback() {
+					log.push(this.id);
+				}
+			}
+
       customElements.define('x-ordering', XOrdering);
+			customElements.define('x-ordering-builtin', XOrderingBuiltin, {extends: 'div'});
 
       work.innerHTML =
           '<x-ordering id=a>' +
@@ -297,10 +436,11 @@ suite('Custom Element Reactions', function() {
             '<x-ordering id=c>' +
               '<x-ordering id=d></x-ordering>' +
               '<x-ordering id=e></x-ordering>' +
+							'<div is="x-ordering-builtin" id=f></div>' +
             '</x-ordering>' +
           '</x-ordering>';
 
-      assert.deepEqual(log, ['a', 'b', 'c', 'd', 'e']);
+      assert.deepEqual(log, ['a', 'b', 'c', 'd', 'e', 'f']);
     });
 
   });
@@ -335,6 +475,22 @@ suite('Custom Element Reactions', function() {
       assert(removed, 'removed must be true [XBooBoo]');
     });
 
+		test('called on customized builtins when disconnected from main document', function() {
+			var removed = false;
+			class XZotBuiltin extends HTMLBRElement {
+				disconnectedCallback() {
+					removed = true;
+				}
+			}
+			customElements.define('x-zot-builtin', XZotBuiltin, {extends: 'br'});
+			var xZotBuiltin = new XZotBuiltin();
+			assert(!removed, 'XZotBuiltin shouldn\'t be removed before even connected');
+			work.appendChild(xZotBuiltin);
+			assert(!removed, 'XZotBuiltin shouldn\'t be removed when it is connected');
+			work.removeChild(xZotBuiltin);
+			assert(removed, 'XZotBuiltin should be removed when disconnected from dom');
+		});
+
     test('called in tree order', function() {
       var log = [];
       class XOrdering2 extends HTMLElement {
@@ -344,17 +500,25 @@ suite('Custom Element Reactions', function() {
       }
       customElements.define('x-ordering2', XOrdering2);
 
+			class XOrdering2Builtin extends HTMLTitleElement {
+				disconnectedCallback() {
+					log.push(this.id)
+				}
+			}
+			customElements.define('x-ordering2-builtin', XOrdering2Builtin, {extends: 'div'});
+
       work.innerHTML =
           '<x-ordering2 id=a>' +
             '<x-ordering2 id=b></x-ordering2>' +
             '<x-ordering2 id=c>' +
               '<x-ordering2 id=d></x-ordering2>' +
               '<x-ordering2 id=e></x-ordering2>' +
+							'<div is="x-ordering2-builtin" id=f></div>' +
             '</x-ordering2>' +
           '</x-ordering2>';
 
         work.removeChild(work.firstElementChild);
-        assert.deepEqual(['a', 'b', 'c', 'd', 'e'], log);
+        assert.deepEqual(['a', 'b', 'c', 'd', 'e', 'f'], log);
     });
 
   });

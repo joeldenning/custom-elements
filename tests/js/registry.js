@@ -77,6 +77,12 @@ suite('CustomElementsRegistry', function() {
       }, '', 'customElements.define failed to throw with a constructor argument with no prototype');
     });
 
+		test('second argument with an invalid extends property', function() {
+			class XInvalidExtends extends HTMLInputElement {}
+			assert.throws(function() {
+				customElements.define('x-invalid-extends', XInvalidExtends, {extends: new Date()});
+			}, '', 'customElements.define failed to throw with an invalid extends option');
+		});
   });
 
   suite('get', function() {
@@ -90,6 +96,15 @@ suite('CustomElementsRegistry', function() {
     test('returns undefined for an undefined constructor', function () {
       assert.isUndefined(customElements.get('x-undefined'));
     });
+
+		test('returns a defined constructor for a customized builtin element', function () {
+			class XGetBuiltin extends HTMLLinkElement {}
+			customElements.define('x-get-builtin', XGetBuiltin, {extends: 'link'});
+			// Customized builtin elements should be retrievable from the registry
+			assert.equal(XGetBuiltin, customElements.get('x-get-builtin'));
+			// The element being extended cannot be retrieved from the registry
+			assert.isUndefined(customElements.get('link'));
+		});
 
   });
 

@@ -12,6 +12,7 @@ import CustomElementInternals from './CustomElementInternals.js';
 import CustomElementRegistry from './CustomElementRegistry.js';
 
 import PatchHTMLElement from './Patch/HTMLElement.js';
+import PatchHTMLElementSubclasses from './Patch/HTMLElementSubclasses.js';
 import PatchDocument from './Patch/Document.js';
 import PatchNode from './Patch/Node.js';
 import PatchElement from './Patch/Element.js';
@@ -26,6 +27,7 @@ if (!priorCustomElements ||
   const internals = new CustomElementInternals();
 
   PatchHTMLElement(internals);
+	PatchHTMLElementSubclasses(internals);
   PatchDocument(internals);
   PatchNode(internals);
   PatchElement(internals);

@@ -8,16 +8,17 @@ import PatchParentNode from './Interface/ParentNode.js';
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
-  Utilities.setPropertyUnchecked(Document.prototype, 'createElement',
+  Utilities.setPropertyUnchecked(document, 'createElement',
     /**
      * @this {Document}
      * @param {string} localName
      * @return {!Element}
      */
-    function(localName) {
+    function(localName, options) {
       // Only create custom elements if this document is associated with the registry.
       if (this.__CE_hasRegistry) {
-        const definition = internals.localNameToDefinition(localName);
+				const name = options && options.is ? options.is : localName;
+        const definition = internals.nameToDefinition(name);
         if (definition) {
           return new (definition.constructor)();
         }
@@ -25,6 +26,9 @@ export default function(internals) {
 
       const result = /** @type {!Element} */
         (Native.Document_createElement.call(this, localName));
+			if (options && options.is) {
+				result.__CE_is = options.is;
+			}
       internals.patch(result);
       return result;
     });
@@ -49,17 +53,18 @@ export default function(internals) {
 
   const NS_HTML = "http://www.w3.org/1999/xhtml";
 
-  Utilities.setPropertyUnchecked(Document.prototype, 'createElementNS',
+  Utilities.setPropertyUnchecked(document, 'createElementNS',
     /**
      * @this {Document}
      * @param {?string} namespace
      * @param {string} localName
      * @return {!Element}
      */
-    function(namespace, localName) {
+    function(namespace, localName, options) {
       // Only create custom elements if this document is associated with the registry.
       if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
-        const definition = internals.localNameToDefinition(localName);
+				const name = options && options.is ? options.is : localName;
+        const definition = internals.nameToDefinition(name);
         if (definition) {
           return new (definition.constructor)();
         }
