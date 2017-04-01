@@ -81,6 +81,20 @@ and [HTML](https://html.spec.whatwg.org/) specifications are marked with the
     that `F.prototype.constructor === F` remains true. Otherwise, the polyfill
     will not be able to create or upgrade your custom elements.
 
+## Customized built-in elements.
+[Customized built-in elements](https://html.spec.whatwg.org/multipage/scripting.html#customized-built-in-element)
+are implemented behind a flag and can be enabled by setting
+`customElements.enableCustomizedBuiltins = true` before defining any customized
+builtin elements.
+
+The status of customized built-in elements is somewhat controversial, which is why
+the implementation is turned off by default. Although the v1 spec for custom
+elements is finalized, there is not a consensus from browsers about whether
+customized builtins will be implemented. For example, Webkit (Safari) has
+stated that they will not implement customized builtins.
+
+You can read more in [this github issue](https://github.com/w3c/webcomponents/issues/509).
+
 ### ES5 vs ES2015
 
 The custom elements v1 spec is not compatible with ES5 style classes. This means
