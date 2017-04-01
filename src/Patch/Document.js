@@ -8,7 +8,7 @@ import PatchParentNode from './Interface/ParentNode.js';
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
-  Utilities.setPropertyUnchecked(document, 'createElement',
+  Utilities.setPropertyUnchecked(Document.prototype, 'createElement',
     /**
      * @this {Document}
      * @param {string} localName
@@ -53,7 +53,7 @@ export default function(internals) {
 
   const NS_HTML = "http://www.w3.org/1999/xhtml";
 
-  Utilities.setPropertyUnchecked(document, 'createElementNS',
+  Utilities.setPropertyUnchecked(Document.prototype, 'createElementNS',
     /**
      * @this {Document}
      * @param {?string} namespace
