@@ -76,6 +76,10 @@ export default class CustomElementRegistry {
     let localName = name;
 
     if (options && options.extends) {
+      if (!this.enableCustomizedBuiltins) {
+        throw new Error(`Customized builtin elements are disabled by default. Set customElements.enableCustomizedBuiltins = true.`);
+      }
+
       if (Utilities.isValidCustomElementName(options.extends)) {
         throw new Error(`A customized builtin element may not extend a custom element.`);
       }

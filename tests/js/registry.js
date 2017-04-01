@@ -77,12 +77,24 @@ suite('CustomElementsRegistry', function() {
       }, '', 'customElements.define failed to throw with a constructor argument with no prototype');
     });
 
-		test('second argument with an invalid extends property', function() {
-			class XInvalidExtends extends HTMLInputElement {}
-			assert.throws(function() {
-				customElements.define('x-invalid-extends', XInvalidExtends, {extends: new Date()});
-			}, '', 'customElements.define failed to throw with an invalid extends option');
-		});
+    test('second argument with an invalid extends property', function() {
+      class XInvalidExtends extends HTMLInputElement {}
+      assert.throws(function() {
+        customElements.define('x-invalid-extends', XInvalidExtends, {extends: new Date()});
+      }, '', 'customElements.define failed to throw with an invalid extends option');
+    });
+
+    test('throws an error if a customized builtin is defined but the feature flag is off', function() {
+      class XBuiltinNotEnabled extends HTMLButtonElement {}
+
+      customElements.enableCustomizedBuiltins = false;
+
+      assert.throws(function() {
+        customElements.define('x-builtin-not-enabled', XBuiltinNotEnabled, {extends: 'button'});
+      }, '', 'customElements.define failed to throw when enableCustomizedBuiltins is falsy');
+
+      customElements.enableCustomizedBuiltins = true;
+    });
   });
 
   suite('get', function() {
@@ -97,14 +109,14 @@ suite('CustomElementsRegistry', function() {
       assert.isUndefined(customElements.get('x-undefined'));
     });
 
-		test('returns a defined constructor for a customized builtin element', function () {
-			class XGetBuiltin extends HTMLLinkElement {}
-			customElements.define('x-get-builtin', XGetBuiltin, {extends: 'link'});
-			// Customized builtin elements should be retrievable from the registry
-			assert.equal(XGetBuiltin, customElements.get('x-get-builtin'));
-			// The element being extended cannot be retrieved from the registry
-			assert.isUndefined(customElements.get('link'));
-		});
+    test('returns a defined constructor for a customized builtin element', function () {
+      class XGetBuiltin extends HTMLLinkElement {}
+      customElements.define('x-get-builtin', XGetBuiltin, {extends: 'link'});
+      // Customized builtin elements should be retrievable from the registry
+      assert.equal(XGetBuiltin, customElements.get('x-get-builtin'));
+      // The element being extended cannot be retrieved from the registry
+      assert.isUndefined(customElements.get('link'));
+    });
 
   });
 

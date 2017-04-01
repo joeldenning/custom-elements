@@ -37,6 +37,7 @@ if (!priorCustomElements ||
 
   /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
+  customElements.enableCustomizedBuiltins = priorCustomElements.enableCustomizedBuiltins;
 
   Object.defineProperty(window, 'customElements', {
     configurable: true,
