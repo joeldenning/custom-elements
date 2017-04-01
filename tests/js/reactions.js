@@ -230,7 +230,6 @@ suite('Custom Element Reactions', function() {
         }
       }
       customElements.define('x-inner', XInner);
-      passed = false;
       var div = document.createElement('div');
       div.innerHTML = '<x-inner></x-inner>';
       assert.isTrue(passed);
