@@ -27,7 +27,7 @@ if (!priorCustomElements ||
   const internals = new CustomElementInternals();
 
   PatchHTMLElement(internals);
-	PatchHTMLElementSubclasses(internals);
+  PatchHTMLElementSubclasses(internals);
   PatchDocument(internals);
   PatchNode(internals);
   PatchElement(internals);

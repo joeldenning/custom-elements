@@ -140,18 +140,18 @@ suite('Built-in Element instanceof', function() {
 
   });
 
-	test('customized builtins are instance of the native elements they extend', function () {
-		class XInstanceofBuiltin extends HTMLStyleElement {
-		}
-		customElements.define('x-instanceof-builtin', XInstanceofBuiltin, {extends: 'style'});
+  test('customized builtins are instance of the native elements they extend', function () {
+    class XInstanceofBuiltin extends HTMLStyleElement {
+    }
+    customElements.define('x-instanceof-builtin', XInstanceofBuiltin, {extends: 'style'});
 
-		var el = new XInstanceofBuiltin();
-		assert.isTrue(el instanceof XInstanceofBuiltin);
-		assert.isTrue(el instanceof HTMLStyleElement);
+    var el = new XInstanceofBuiltin();
+    assert.isTrue(el instanceof XInstanceofBuiltin);
+    assert.isTrue(el instanceof HTMLStyleElement);
 
-		el = document.createElement('style', {is: 'x-instanceof-builtin'});
-		assert.isTrue(el instanceof HTMLStyleElement);
-		assert.isTrue(el instanceof XInstanceofBuiltin);
-	});
+    el = document.createElement('style', {is: 'x-instanceof-builtin'});
+    assert.isTrue(el instanceof HTMLStyleElement);
+    assert.isTrue(el instanceof XInstanceofBuiltin);
+  });
 
 });

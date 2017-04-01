@@ -252,7 +252,7 @@ export default class CustomElementInternals {
    */
   upgradeElement(element) {
     const currentState = element.__CE_state;
-		if (currentState !== undefined) return;
+    if (currentState !== undefined) return;
     const definition = this.nodeToDefinition(element);
     if (!definition) return;
 

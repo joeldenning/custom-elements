@@ -17,7 +17,7 @@ export default function(internals) {
     function(localName, options) {
       // Only create custom elements if this document is associated with the registry.
       if (this.__CE_hasRegistry) {
-				const name = options && options.is ? options.is : localName;
+        const name = options && options.is ? options.is : localName;
         const definition = internals.nameToDefinition(name);
         if (definition) {
           return new (definition.constructor)();
@@ -26,9 +26,9 @@ export default function(internals) {
 
       const result = /** @type {!Element} */
         (Native.Document_createElement.call(this, localName));
-			if (options && options.is) {
-				result.__CE_is = options.is;
-			}
+      if (options && options.is) {
+        result.__CE_is = options.is;
+      }
       internals.patch(result);
       return result;
     });
@@ -63,7 +63,7 @@ export default function(internals) {
     function(namespace, localName, options) {
       // Only create custom elements if this document is associated with the registry.
       if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
-				const name = options && options.is ? options.is : localName;
+        const name = options && options.is ? options.is : localName;
         const definition = internals.nameToDefinition(name);
         if (definition) {
           return new (definition.constructor)();

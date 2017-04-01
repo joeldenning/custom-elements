@@ -48,21 +48,21 @@ suite('Upgrades', function() {
 
     class X1 extends HTMLElement {}
     class X2 extends HTMLElement {}
-		class XDisconnectedBuiltin1 extends HTMLSpanElement {}
+    class XDisconnectedBuiltin1 extends HTMLSpanElement {}
     customElements.define('x-disconnected-1', X1);
     customElements.define('x-disconnected-2', X2);
-		customElements.define('x-disconnected-builtin-1', XDisconnectedBuiltin1, {extends: 'span'});
+    customElements.define('x-disconnected-builtin-1', XDisconnectedBuiltin1, {extends: 'span'});
 
     // disconnected elements should not be upgraded
     assert.notInstanceOf(e1, X1);
     assert.notInstanceOf(e2, X2);
-		assert.notInstanceOf(e3, XDisconnectedBuiltin1);
+    assert.notInstanceOf(e3, XDisconnectedBuiltin1);
 
     // they should upgrade when connected
     work.appendChild(e1);
     assert.instanceOf(e1, X1);
     assert.instanceOf(e2, X2);
-		assert.instanceOf(e3, XDisconnectedBuiltin1);
+    assert.instanceOf(e3, XDisconnectedBuiltin1);
   });
 
 });
