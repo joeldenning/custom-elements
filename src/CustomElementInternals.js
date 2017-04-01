@@ -226,7 +226,7 @@ export default class CustomElementInternals {
         element.__CE_is = element.getAttribute('is') || element.is;
         element.removeAttribute('is');
         delete element.is;
-				elements.push(element);
+        elements.push(element);
       } else {
         elements.push(element);
       }
