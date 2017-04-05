@@ -11,12 +11,12 @@ export default function(internals) {
     patchElement(`HTML${subclass}Element`, Native.HTMLElement_subclasses[subclass]);
   }
 
-  function patchElement(elementName, NativeElement) {
+  function patchElement(constructorName, NativeElement) {
     if (!NativeElement) {
       return;
     }
 
-    window[elementName] = (function() {
+    window[constructorName] = (function() {
       /**
        * @type {function(new: HTMLElement): !HTMLElement}
        */
@@ -24,7 +24,7 @@ export default function(internals) {
         // This should really be `new.target` but `new.target` can't be emulated
         // in ES5. Assuming the user keeps the default value of the constructor's
         // prototype's `constructor` property, this is equivalent.
-				const constructor = /** @type {!Function} */ (this.constructor);
+        const constructor = /** @type {!Function} */ (this.constructor);
 
         const definition = internals.constructorToDefinition(constructor);
         if (!definition) {
@@ -35,18 +35,18 @@ export default function(internals) {
 
         if (constructionStack.length === 0) {
           let element = Native.Document_createElement.call(document, definition.localName);
-					element.setAttribute('is', definition.name);
+          element.setAttribute('is', definition.name);
           Object.setPrototypeOf(element, constructor.prototype);
           element.__CE_state = CEState.custom;
           element.__CE_definition = definition;
           internals.patch(element);
-					return /** @type {!HTMLElement} */ (element);
+          return /** @type {!HTMLElement} */ (element);
         }
 
         const lastIndex = constructionStack.length - 1;
         const element = constructionStack[lastIndex];
         if (element === AlreadyConstructedMarker) {
-          throw new Error(`The ${elementName} constructor was either called reentrantly for this constructor or called multiple times.`);
+          throw new Error(`The ${constructorName} constructor was either called reentrantly for this constructor or called multiple times.`);
         }
         constructionStack[lastIndex] = AlreadyConstructedMarker;
 

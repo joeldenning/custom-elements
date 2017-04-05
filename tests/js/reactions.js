@@ -91,21 +91,21 @@ suite('Custom Element Reactions', function() {
       assert.isTrue(pass);
     });
 
-		test('is attribute is added to customized builtins instantiated via createElement', function() {
-			class XIsAttributeBuiltin extends HTMLButtonElement {
-			}
-			customElements.define('x-is-attribute-builtin', XIsAttributeBuiltin, {extends: 'button'});
-			var el = document.createElement('button', {is: 'x-is-attribute-builtin'});
-			assert.equal(el.getAttribute('is'), 'x-is-attribute-builtin');
-		});
+    test('is attribute is added to customized builtins instantiated via createElement', function() {
+      class XIsAttributeBuiltin extends HTMLButtonElement {
+      }
+      customElements.define('x-is-attribute-builtin', XIsAttributeBuiltin, {extends: 'button'});
+      var el = document.createElement('button', {is: 'x-is-attribute-builtin'});
+      assert.equal(el.getAttribute('is'), 'x-is-attribute-builtin');
+    });
 
-		test('is attribute is added to customized builtins instantiated via constructor', function() {
-			class XIsAttributeBuiltin2 extends HTMLButtonElement {
-			}
-			customElements.define('x-is-attribute-builtin2', XIsAttributeBuiltin2, {extends: 'button'});
-			var el = new XIsAttributeBuiltin2();
-			assert.equal(el.getAttribute('is'), 'x-is-attribute-builtin2');
-		});
+    test('is attribute is added to customized builtins instantiated via constructor', function() {
+      class XIsAttributeBuiltin2 extends HTMLButtonElement {
+      }
+      customElements.define('x-is-attribute-builtin2', XIsAttributeBuiltin2, {extends: 'button'});
+      var el = new XIsAttributeBuiltin2();
+      assert.equal(el.getAttribute('is'), 'x-is-attribute-builtin2');
+    });
 
     test('constructor is called on customized builtins when instantiated via createElement', function() {
       var pass = false;
