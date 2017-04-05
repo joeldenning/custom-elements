@@ -76,7 +76,7 @@ export default class CustomElementRegistry {
     let localName = name;
 
     if (options && options.extends) {
-      if (!this.enableCustomizedBuiltins) {
+      if (!this['enableCustomizedBuiltins']) {
         throw new Error(`Customized builtin elements are disabled by default. Set customElements.enableCustomizedBuiltins = true.`);
       }
 
@@ -86,7 +86,7 @@ export default class CustomElementRegistry {
 
       const el = document.createElement(options.extends);
       if (el instanceof window['HTMLUnknownElement']) {
-        throw new Error(`Cannot extend '${options.extends}': is not a read HTML element`);
+        throw new Error(`Cannot extend '${options.extends}': is not a real HTML element`);
       }
 
       localName = options.extends;

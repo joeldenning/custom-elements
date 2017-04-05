@@ -24,8 +24,7 @@ export default function(internals) {
         // This should really be `new.target` but `new.target` can't be emulated
         // in ES5. Assuming the user keeps the default value of the constructor's
         // prototype's `constructor` property, this is equivalent.
-        /** @type {!Function} */
-        const constructor = this.constructor;
+				const constructor = /** @type {!Function} */ (this.constructor);
 
         const definition = internals.constructorToDefinition(constructor);
         if (!definition) {
@@ -35,17 +34,13 @@ export default function(internals) {
         const constructionStack = definition.constructionStack;
 
         if (constructionStack.length === 0) {
-          let element;
-          if (definition.name !== definition.localName) {
-            element = Native.Document_createElement.call(document, definition.localName, {is: definition.name});
-          } else {
-            element = Native.Document_createElement.call(document, definition.localName);
-          }
+          let element = Native.Document_createElement.call(document, definition.localName);
+					element.setAttribute('is', definition.name);
           Object.setPrototypeOf(element, constructor.prototype);
           element.__CE_state = CEState.custom;
           element.__CE_definition = definition;
           internals.patch(element);
-          return element;
+					return /** @type {!HTMLElement} */ (element);
         }
 
         const lastIndex = constructionStack.length - 1;

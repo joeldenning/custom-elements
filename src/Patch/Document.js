@@ -28,6 +28,7 @@ export default function(internals) {
         (Native.Document_createElement.call(this, localName));
       if (options && options.is) {
         result.__CE_is = options.is;
+        result.setAttribute('is', options.is)
       }
       internals.patch(result);
       return result;
@@ -72,6 +73,10 @@ export default function(internals) {
 
       const result = /** @type {!Element} */
         (Native.Document_createElementNS.call(this, namespace, localName));
+      if (options && options.is) {
+        result.__CE_is = options.is;
+        result.setAttribute('is', options.is)
+      }
       internals.patch(result);
       return result;
     });

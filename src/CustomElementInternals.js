@@ -45,8 +45,8 @@ export default class CustomElementInternals {
    * @param {!Node} node
    * @return {!CustomElementDefinition|null}
    */
-  nodeToDefinition(node) {
-    const name = typeof node.__CE_is === 'string' ? node.__CE_is : node.localName;
+  nodeToCustomElementDefinition(node) {
+    const name = node.__CE_is || node.localName;
     const definition = this.nameToDefinition(name);
     if (definition && definition.localName === node.localName) {
       return definition;
@@ -187,6 +187,8 @@ export default class CustomElementInternals {
     const elements = [];
 
     const gatherElements = element => {
+      let isAttribute;
+
       if (element.localName === 'link' && element.getAttribute('rel') === 'import') {
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
@@ -222,10 +224,8 @@ export default class CustomElementInternals {
             this.patchAndUpgradeTree(importNode, visitedImports);
           });
         }
-      } else if (element.hasAttribute('is') || element.is) {
-        element.__CE_is = element.getAttribute('is') || element.is;
-        element.removeAttribute('is');
-        delete element.is;
+      } else if (isAttribute = element.getAttribute('is')) {
+        element.__CE_is = isAttribute;
         elements.push(element);
       } else {
         elements.push(element);
@@ -253,7 +253,7 @@ export default class CustomElementInternals {
   upgradeElement(element) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
-    const definition = this.nodeToDefinition(element);
+    const definition = this.nodeToCustomElementDefinition(element);
     if (!definition) return;
 
     definition.constructionStack.push(element);

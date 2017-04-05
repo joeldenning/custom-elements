@@ -13,6 +13,7 @@ const CustomElementState = {
 
 /**
  * @typedef {{
+ *  name: string,
  *  localName: string,
  *  constructor: !Function,
  *  connectedCallback: Function,
@@ -59,3 +60,6 @@ Element.prototype.__CE_definition;
 
 /** @type {!DocumentFragment|undefined} */
 Element.prototype.__CE_shadowRoot;
+
+/** @type {!String|undefined} */
+Element.prototype.__CE_is;
