@@ -807,7 +807,6 @@ let Deferred;
   };
 
   function changeAttribute(element, name, value, operation) {
-    name = name.toLowerCase();
     const oldValue = element.getAttribute(name);
     operation.call(element, name, value);
 
